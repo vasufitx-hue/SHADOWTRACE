@@ -1,0 +1,44 @@
+@'
+# Python virtual environments
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Testing and linting
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Node dependencies
+node_modules/
+frontend/node_modules/
+
+# Frontend build files
+dist/
+build/
+frontend/dist/
+frontend/build/
+.vite/
+
+# Generated reports
+intelligence_report.json
+
+# Operating system
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE settings
+.vscode/
+.idea/
+'@ | Set-Content -Path .gitignore -Encoding utf8
