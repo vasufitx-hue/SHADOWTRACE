@@ -209,4 +209,27 @@ Test coverage includes:
 - Report generation
 - Risk classification
 - Scam DNA extraction
--
+## System Architecture
+
+The following diagram illustrates the SHADOWTRACE analysis pipeline.
+
+```mermaid
+flowchart TD
+    A["User submits suspicious message"] --> B["React + Vite Dashboard"]
+    B --> C["FastAPI REST Backend"]
+    C --> D["Python Intelligence Engine"]
+
+    D --> E["Text Analyzer"]
+    D --> F["URL Analyzer"]
+    D --> G["Scam DNA Detection"]
+
+    E --> H["Risk Engine"]
+    F --> H
+    G --> H
+
+    H --> I["Risk Score and Scam Classification"]
+    I --> J["Report Formatter"]
+    J --> K["JSON Report Export"]
+
+    K --> B
+```
