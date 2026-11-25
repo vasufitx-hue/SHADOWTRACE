@@ -7,6 +7,17 @@ TEXT_KEYWORD_CAP = 25
 URL_WEIGHT = 5
 URL_CAP = 10
 
+SCAM_CATEGORY_WEIGHT = 15
+
+KNOWN_SCAM_CATEGORIES = {
+    "OTP Theft",
+    "Banking Phishing",
+    "Fake Reward or Refund",
+    "UPI Scam",
+    "Credential Theft",
+    "Delivery Phishing",
+}
+
 INDICATOR_WEIGHTS = {
     "IP address used as hostname": 25,
     "Known URL shortening service": 15,
@@ -55,16 +66,22 @@ def classify_risk(score: int) -> str:
 def calculate_risk(
     text_result: dict | None = None,
     url_result: dict | None = None,
+    scam_dna_result: dict | None = None,
 ) -> dict:
     """Calculate an explainable risk score from analyzer results."""
 
-    if text_result is None and url_result is None:
+    if (
+        text_result is None
+        and url_result is None
+        and scam_dna_result is None
+    ):
         raise ValueError("At least one analyzer result is required.")
 
     score = 0
     reasons = []
     breakdown = {}
 
+    # 1. Score suspicious text keywords.
     if text_result is not None:
         keywords = validate_result(
             text_result,
@@ -84,7 +101,11 @@ def calculate_risk(
                 f"Suspicious text keywords detected: {len(keywords)}"
             )
 
-        urls = validate_result(text_result, "detected_urls")
+        # 2. Score URLs found in the message.
+        urls = validate_result(
+            text_result,
+            "detected_urls"
+        )
 
         url_points = min(
             len(urls) * URL_WEIGHT,
@@ -99,8 +120,12 @@ def calculate_risk(
                 f"URLs found in message: {len(urls)}"
             )
 
+    # 3. Score suspicious URL indicators.
     if url_result is not None:
-        indicators = validate_result(url_result, "indicators")
+        indicators = validate_result(
+            url_result,
+            "indicators"
+        )
 
         indicator_points = 0
 
@@ -119,12 +144,44 @@ def calculate_risk(
                     f"{indicator} (+{points})"
                 )
 
-      
         indicator_points = min(indicator_points, 75)
 
         breakdown["url_indicators"] = indicator_points
         score += indicator_points
 
+    # 4. Include Scam DNA category in risk scoring.
+    if scam_dna_result is not None:
+        if not isinstance(scam_dna_result, dict):
+            raise TypeError(
+                "Scam DNA result must be a dictionary."
+            )
+
+        category = scam_dna_result.get(
+            "category",
+            "Unknown"
+        )
+
+        if not isinstance(category, str):
+            raise TypeError(
+                "Scam DNA category must be a string."
+            )
+
+        category_points = (
+            SCAM_CATEGORY_WEIGHT
+            if category in KNOWN_SCAM_CATEGORIES
+            else 0
+        )
+
+        breakdown["scam_dna_category"] = category_points
+
+        if category_points:
+            score += category_points
+            reasons.append(
+                f"Scam category identified: "
+                f"{category} (+{category_points})"
+            )
+
+    # 5. Keep the final score within 0–100.
     score = min(score, 100)
 
     return {
