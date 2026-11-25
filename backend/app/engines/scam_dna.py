@@ -1,4 +1,4 @@
- 
+
 import re
 
 
@@ -12,7 +12,12 @@ SCAM_INDICATORS = [
     "suspended",
     "password",
     "refund",
-    "upi"
+    "upi",
+    "package",
+    "delivery",
+    "shipping",
+    "parcel",
+    "tracking",
 ]
 
 
@@ -46,20 +51,37 @@ def classify_scam(text):
 
     indicators = extract_indicators(text)
 
+    # OTP theft
     if "otp" in indicators:
         return "OTP Theft"
 
+    # Banking phishing
     if "kyc" in indicators or "blocked" in indicators:
         return "Banking Phishing"
 
+    # Fake rewards and refunds
     if "cashback" in indicators or "refund" in indicators:
         return "Fake Reward or Refund"
 
+    # UPI fraud
     if "upi" in indicators:
         return "UPI Scam"
 
+    # Credential theft
     if "password" in indicators:
         return "Credential Theft"
+
+    # Delivery and parcel phishing
+    delivery_indicators = [
+        "package",
+        "delivery",
+        "shipping",
+        "parcel",
+        "tracking",
+    ]
+
+    if any(item in indicators for item in delivery_indicators):
+        return "Delivery Phishing"
 
     return "Unknown"
 
@@ -75,7 +97,7 @@ def create_scam_fingerprint(text):
         "normalized_text": cleaned_text,
         "indicators": indicators,
         "category": category,
-        "indicator_count": len(indicators)
+        "indicator_count": len(indicators),
     }
 
 
@@ -98,9 +120,8 @@ def compare_scam_fingerprints(message_a, message_b):
 
     return {
         "common_indicators": sorted(common_indicators),
-        "similarity": round(similarity, 2)
+        "similarity": round(similarity, 2),
     }
-
 
 
 if __name__ == "__main__":
@@ -121,3 +142,13 @@ if __name__ == "__main__":
 
     print("\nFINGERPRINT COMPARISON:")
     print(compare_scam_fingerprints(message_a, message_b))
+
+    delivery_message = (
+        "Your package delivery is on hold. "
+        "Pay the pending shipping fee immediately "
+        "to receive your parcel."
+    )
+
+    print("\nDELIVERY SCAM TEST:")
+    print(extract_indicators(delivery_message))
+    print(classify_scam(delivery_message))

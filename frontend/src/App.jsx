@@ -1,4 +1,4 @@
-
+﻿
 import { useState, useEffect } from "react";
 
 import {
@@ -166,9 +166,12 @@ function App() {
     scamDNA.indicators || [];
 
   const scamCategory =
-    scamDNA.scam_category ||
-    textAnalysis.scam_category ||
-    "Unknown";
+  scamDNA?.category ||
+  scamDNA?.scam_category ||
+  scamDNA?.fingerprint?.category ||
+  textAnalysis?.category ||
+  textAnalysis?.scam_category ||
+  "Unknown";
 
   return (
     <div className="app">
@@ -676,7 +679,7 @@ Verify your KYC immediately at http://fake-bank.example/login"
         <footer className="footer">
 
           <span>
-            SHADOWTRACE © 2026
+            SHADOWTRACE ┬⌐ 2026
           </span>
 
           <span>
